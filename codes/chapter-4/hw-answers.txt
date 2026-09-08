@@ -1,0 +1,88 @@
+Questions
+1. Run process-run.py with the following flags: -l 5:100,5:100. 
+What should the CPU utilization be (e.g., the percent of time the
+CPU is in use?) Why do you know this? Use the -c and -p flags to
+see if you were right.
+
+Answer:
+- It must be 100%. There is no other process utilizes CPU or makes it wait such as I/O
+
+
+2. Now run with these flags: ./process-run.py -l 4:100,1:0.
+These flags specify one process with 4 instructions (all to use the
+CPU), and one that simply issues an I/O and waits for it to be done.
+How long does it take to complete both processes? Use -c and -p
+to find out if you were right.
+
+-I wasn't able to guess. It indicates 10 steps -> 5 for CPU and 4 for IO
+
+3. Switch the order of the processes: -l 1:0,4:100. What happens
+now? Does switching the order matter? Why? (As always, use -c
+and -p to see if you were right)
+
+- I/O waits for input, and while waiting CPU instruction can finish its job. Therefore it is faster.
+
+4. We’ll now explore some of the other flags. One important flag is
+-S, which determines how the system reacts when a process is-
+sues an I/O. With the flag set to SWITCH ON END, the system
+will NOT switch to another process while one is doing I/O, in-
+stead waiting until the process is completely finished. What hap-
+pens when you run the following two processes (-l 1:0,4:100
+-c -S SWITCH ON END), one doing I/O and the other doing CPU
+work?
+
+- It will first handle I/O -do not jump to CPU- then continue with other processes.
+
+5. Now, run the same processes, but with the switching behavior set
+to switch to another process whenever one is WAITING for I/O (-l
+1:0,4:100 -c -S SWITCH ON IO). What happens now? Use -c
+and -p to confirm that you are right.
+
+- It has become faster as it switched to CPU job while waiting for I/O
+"python3 chapter-4/process-run.py -l 4:100,1:0 -c -p -S SWITCH_ON_IO"
+
+6. One other important behavior is what to do when an I/O com-
+pletes. With -I IO RUN LATER, when an I/O completes, the pro-
+cess that issued it is not necessarily run right away; rather, what-
+ever was running at the time keeps running. What happens when
+you run this combination of processes? (./process-run.py -l
+3:0,5:100,5:100,5:100 -S SWITCH ON IO -c -p -I
+IO RUN LATER) Are system resources being effectively utilized?
+
+"python3 chapter-4/process-run.py -l 3:0,5:100,5:100,5:100 -S SWITCH_ON_IO -c -p -I IO_RUN_LATER"
+
+-No, I think it is not because we could have finished I/O task after it is finished, and then contniue with next I/O task
+
+7. Now run the same processes, but with -I IO RUN IMMEDIATE set,
+which immediately runs the process that issued the I/O. How does
+this behavior differ? Why might running a process that just com-
+pleted an I/O again be a good idea?
+
+-As I explained previosuly, it is more effective to handle I/O tasks first -and let them wait until I/O is done 
+because other tasks that consume CPU can execute while I/O is waiting.
+"python3 chapter-4/process-run.py -l 3:0,5:100,5:100,5:100 -S SWITCH_ON_IO -c -p -I IO_RUN_LATER"
+
+
+8. Now run with some randomly generated processes using flags -s
+1 -l 3:50,3:50 or -s 2 -l 3:50,3:50 or -s 3 -l 3:50,
+3:50. See if you can predict how the trace will turn out. What hap-
+pens when you use the flag -I IO RUN IMMEDIATE versus that
+flag -I IO RUN LATER? What happens when you use the flag -S
+SWITCH ON IO versus -S SWITCH ON END?
+
+"python3 chapter-4/process-run.py -s 1 -l 3:50,3:50 -S SWITCH_ON_IO -c -p -I IO_RUN_LATER" 
+"python3 chapter-4/process-run.py -s 1 -l 3:50,3:50 -S SWITCH_ON_END -c -p -I IO_RUN_LATER"
+"python3 chapter-4/process-run.py -s 1 -l 3:50,3:50 -S SWITCH_ON_IO -c -p -I IO_RUN_IMMEDIATE" -> Most effective
+"python3 chapter-4/process-run.py -s 1 -l 3:50,3:50 -S SWITCH_ON_END -c -p -I IO_RUN_IMMEDIATE" 
+
+python3 chapter-4/process-run.py -s 2 -l 3:50,3:50 -S SWITCH_ON_IO -c -p -I IO_RUN_LATER
+python3 chapter-4/process-run.py -s 2 -l 3:50,3:50 -S SWITCH_ON_END -c -p -I IO_RUN_LATER
+python3 chapter-4/process-run.py -s 2 -l 3:50,3:50 -S SWITCH_ON_IO -c -p -I IO_RUN_IMMEDIATE
+python3 chapter-4/process-run.py -s 2 -l 3:50,3:50 -S SWITCH_ON_END -c -p -I IO_RUN_IMMEDIATE -> Switch on end makes it less effective
+
+python3 chapter-4/process-run.py -s 3 -l 3:50 -S SWITCH_ON_IO -c -p -I IO_RUN_LATER
+python3 chapter-4/process-run.py -s 3 -l 3:50 -S SWITCH_ON_END -c -p -I IO_RUN_LATER
+python3 chapter-4/process-run.py -s 3 -l 3:50 -S SWITCH_ON_IO -c -p -I IO_RUN_IMMEDIATE
+python3 chapter-4/process-run.py -s 3 -l 3:50 -S SWITCH_ON_END -c -p -I IO_RUN_IMMEDIATE -> No difference as there is only one process
+
+
