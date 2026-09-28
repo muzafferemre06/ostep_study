@@ -1,4 +1,4 @@
-# Sample code for Chapter 5 'fork()' syscall
+// Sample code for Chapter 5 'fork()' syscall
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -18,4 +18,4 @@ int main(int argc, char *argv[]) {
         printf("parent of %d (pid:%d)\n", rc, (int) getpid());
     }
     return 0;
-    }   
+    }
