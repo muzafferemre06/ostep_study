@@ -7,11 +7,18 @@
 // detailed implementation
 // applyCommand() = an interface for applying commands coming from user
 
-    // TODO: where to define path?
+    // Check for command if built-in or not! exit, cd (chdir), path
+
+    // TODO: where to define path='/bin' (initial) variable? Or how to use path (lines 153)
     // for executing commands use access('path', XOK) -> if fails error
-    //
 
+    // implement '>' redirection as well! by closing stdout, and opening other file!
+    // should overwrite if opened - else open
+    // multiple redirection sign or files are error
 
+    // also apply parallel commands = use waitpid with loop
+
+    // read errors: line 206
 /*
 Get the user input
 Apply the user input
@@ -49,6 +56,7 @@ int main(int argc, char *argv[]) {
             charsRead = getline(&buffer, &bufferSize, stdin);
             // Parse input
             // strsep(buffer, ...);
+            // TODO: how to give / decide parameters precisely?
 
             fprintf(stdout, "User input, lenght of %zu, is: %s\n",
                 charsRead, buffer);
