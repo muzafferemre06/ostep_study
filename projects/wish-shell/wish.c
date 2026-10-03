@@ -1,11 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 const int TRUE = 1;
 const int ARG_LIM = 10;
-
+const int PATH_LENGHT = 50;
 /* Step by step plan:
  * 1-) Implement basic parser & command executor
  * without concerning edge cases.
@@ -39,23 +40,62 @@ int applyCommand(char* command, char* arguments[], int argNum) {
     else {
 
         // For debug purpose
-        if (arguments == NULL) {
-            fprintf(stdout, "No arguments are given for function!\n");
-            fprintf(stdout, "Command given: %s\n", command);
-        }
-        else {
-            fprintf(stdout, "Arguments are given for function!\n");
-            fprintf(stdout, "Command given: %s with arguments:", command);
-            for (int i = 0; i < argNum; i++)
-                fprintf(stdout, " %s", arguments[i]);
-            fprintf(stdout, "\n");
-        }
+        // if (argNum <= 0) {
+        //     fprintf(stdout, "No arguments are given for function!\n");
+        //     fprintf(stdout, "Command given: %s\n", command);
+        // }
+        // else {
+        //     fprintf(stdout, "Arguments are given for function!\n");
+        //     fprintf(stdout, "Command given '%s' with arguments:", command);
+        //     for (int i = 1; i < argNum; i++)
+        //         fprintf(stdout, " %s", arguments[i]);
+        //     fprintf(stdout, "\n");
+        // }
 
         // This part will implement the main functionality
         // TODO: implement execv logic.
-    }
 
-    return (0);
+        // Defines path that will be executed.
+        // TODO: implement how to check paths.
+        for (int i = 0; i < argNum; i++)
+            fprintf(stdout, "%d. arg is %s\n", i, arguments[i]);
+
+        // There is interesting problem here, IDK why?
+        char path[PATH_LENGHT];
+        strcpy(path, "/bin/"); fprintf(stdout, "path: %s\n", path);
+        strcat(path, command); fprintf(stdout, "path: %s\n", path);
+        strcpy(command, path); fprintf(stdout, "command: %s\n", command);
+
+        for (int i = 0; i <= argNum; i++)
+            fprintf(stdout, "%d. arg is %s\n", i, arguments[i]);
+
+        // fprintf(stdout, "concatinated path: %s\n", path);
+        int result = access(path, X_OK);
+        if (result == -1) {
+            fprintf(stderr, "Couldn't access the path %s!\n", path);
+            return (2);
+        }
+
+
+        int childPID = fork();
+        if (childPID < 0) {
+            fprintf(stderr, "Fork failed!\n");
+            return (3);
+        }
+        else if (childPID == 0) {
+            // execv
+            // first argument is path
+            // second argument is the arguments of desired command
+            execv(command, arguments);
+            fprintf(stderr, "There was a problem while execv given command!\n");
+            return (4);
+        }
+        else {
+            int rc_wait = wait(NULL);
+            fprintf(stdout, "Child process finished it job!\n");
+            return (0);
+        }
+    }
 }
 char* getInput(void) {
     char* buffer;
@@ -79,20 +119,25 @@ char* getInput(void) {
 int parseInput(char* input, char* command[], char* arguments[], int* argNum) {
     // TODO: Add some checks for error catching!
     // Parses the string to get arguments.
-    *command = strsep(&input, " ");
-    if (*command == NULL){
-        fprintf(stderr, "Command wasn't extracted!\n");
-        return 1;
-    }
+
+    // This part gets command seperately.
+    // *command = strsep(&input, " ");
+    // if (*command == NULL){
+    //     fprintf(stderr, "Command wasn't extracted!\n");
+    //     return 1;
+    // }
 
     // TODO: delete trailing spaces -> look for if an argument only contains by space.
     int i;
     for(i = 0; i < ARG_LIM &&
         (arguments[i] = strsep(&input, " ")) != NULL; i++);
-    *argNum = i;
 
-    for (i = 0; i < *argNum; i++)
-        fprintf(stdout, "%d. arg is %s\n", i, arguments[i]);
+    *argNum = i;
+    *command = arguments[0];
+    arguments[*argNum] = NULL; // for execv function
+
+    // for (i = 0; i < *argNum; i++)
+    //     fprintf(stdout, "%d. arg is %s\n", i, arguments[i]);
 
     return (0);
 }
@@ -120,7 +165,7 @@ int main(int argc, char *argv[]) {
         }
 
         int argNum;
-        char* arguments[ARG_LIM];
+        char* arguments[ARG_LIM + 1];
 
         // Gets command into variable 'command'
         if (parseInput(input, &command, arguments, &argNum) > 0) {
