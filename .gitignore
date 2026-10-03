@@ -1,0 +1,6 @@
+# OSTEP chapter PDFs (free at https://pages.cs.wisc.edu/~remzi/OSTEP/)
+*.pdf
+
+# Compiled binaries
+*.out
+projects/wish-shell/wish
