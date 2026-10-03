@@ -38,55 +38,26 @@ int applyCommand(char* command, char* arguments[], int argNum) {
         return (1);
     }
     else {
-
-        // For debug purpose
-        // if (argNum <= 0) {
-        //     fprintf(stdout, "No arguments are given for function!\n");
-        //     fprintf(stdout, "Command given: %s\n", command);
-        // }
-        // else {
-        //     fprintf(stdout, "Arguments are given for function!\n");
-        //     fprintf(stdout, "Command given '%s' with arguments:", command);
-        //     for (int i = 1; i < argNum; i++)
-        //         fprintf(stdout, " %s", arguments[i]);
-        //     fprintf(stdout, "\n");
-        // }
-
-        // This part will implement the main functionality
-        // TODO: implement execv logic.
-
+        // This part implement the main functionality
         // Defines path that will be executed.
-        // TODO: implement how to check paths.
-        for (int i = 0; i < argNum; i++)
-            fprintf(stdout, "%d. arg is %s\n", i, arguments[i]);
-
-        // There is interesting problem here, IDK why?
         char path[PATH_LENGHT];
-        strcpy(path, "/bin/"); fprintf(stdout, "path: %s\n", path);
-        strcat(path, command); fprintf(stdout, "path: %s\n", path);
-        strcpy(command, path); fprintf(stdout, "command: %s\n", command);
+        strcpy(path, "/bin/"); //fprintf(stdout, "path: %s\n", path);
+        strcat(path, command); //fprintf(stdout, "path: %s\n", path);
 
-        for (int i = 0; i <= argNum; i++)
-            fprintf(stdout, "%d. arg is %s\n", i, arguments[i]);
-
-        // fprintf(stdout, "concatinated path: %s\n", path);
         int result = access(path, X_OK);
         if (result == -1) {
             fprintf(stderr, "Couldn't access the path %s!\n", path);
             return (2);
         }
-
-
         int childPID = fork();
         if (childPID < 0) {
             fprintf(stderr, "Fork failed!\n");
             return (3);
         }
         else if (childPID == 0) {
-            // execv
             // first argument is path
             // second argument is the arguments of desired command
-            execv(command, arguments);
+            execv(path, arguments);
             fprintf(stderr, "There was a problem while execv given command!\n");
             return (4);
         }
@@ -118,15 +89,6 @@ char* getInput(void) {
 }
 int parseInput(char* input, char* command[], char* arguments[], int* argNum) {
     // TODO: Add some checks for error catching!
-    // Parses the string to get arguments.
-
-    // This part gets command seperately.
-    // *command = strsep(&input, " ");
-    // if (*command == NULL){
-    //     fprintf(stderr, "Command wasn't extracted!\n");
-    //     return 1;
-    // }
-
     // TODO: delete trailing spaces -> look for if an argument only contains by space.
     int i;
     for(i = 0; i < ARG_LIM &&
@@ -138,7 +100,6 @@ int parseInput(char* input, char* command[], char* arguments[], int* argNum) {
 
     // for (i = 0; i < *argNum; i++)
     //     fprintf(stdout, "%d. arg is %s\n", i, arguments[i]);
-
     return (0);
 }
 int main(int argc, char *argv[]) {
