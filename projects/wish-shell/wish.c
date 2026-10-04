@@ -6,7 +6,10 @@
 
 const int TRUE = 1;
 const int ARG_LIM = 10;
-const int PATH_LENGHT = 50;
+const int PATH_LENGHT = 100;
+
+char** pathList;
+int pathNumber = 0;
 /* Step by step plan:
  * 1-) Implement basic parser & command executor
  * without concerning edge cases.
@@ -38,17 +41,45 @@ int applyCommand(char* command, char* arguments[], int argNum) {
         return (1);
     }
     else {
-        // This part implement the main functionality
+
+        // // Defines path that will be executed.
+        // char path[PATH_LENGHT];
+        // strcpy(path, "/bin/")
+        // strcat(path, command); //fprintf(stdout, "path: %s\n", path);
+
+        // // This part implement the main functionality
+        // int result = access(path, X_OK);
+        // if (result == -1) {
+        //     fprintf(stderr, "Couldn't access the path %s!\n", path);
+        //     return (2);
+        // }
+
+    // This part implement the main functionality
+
         // Defines path that will be executed.
         char path[PATH_LENGHT];
-        strcpy(path, "/bin/"); //fprintf(stdout, "path: %s\n", path);
-        strcat(path, command); //fprintf(stdout, "path: %s\n", path);
+        int pathFound = 0; // Flag for checking any suitable path.
 
-        int result = access(path, X_OK);
-        if (result == -1) {
-            fprintf(stderr, "Couldn't access the path %s!\n", path);
+        // Finds first path having the desired command
+        // TODO: I have to test this somehow, but don't know how.
+        for (int i = 0; i < pathNumber; i++) {
+            strcpy(path, pathList[i]);
+            strcat(path, command);
+
+            int result = access(path, X_OK);
+            if (result == 0) {
+                pathFound = 1;
+                break;
+            }
+            else {
+                fprintf(stderr, "Couldn't access the path %s!\n", path);
+            }
+        }
+        if (!pathFound) {
+            fprintf(stderr, "Couldn't find a path for command in current pathList!\n");
             return (2);
         }
+
         int childPID = fork();
         if (childPID < 0) {
             fprintf(stderr, "Fork failed!\n");
@@ -63,7 +94,7 @@ int applyCommand(char* command, char* arguments[], int argNum) {
         }
         else {
             int rc_wait = wait(NULL);
-            fprintf(stdout, "Child process finished it job!\n");
+            //fprintf(stdout, "Child process finished it job!\n");
             return (0);
         }
     }
@@ -82,8 +113,8 @@ char* getInput(void) {
     charsRead = getline(&buffer, &bufferSize, stdin);
     buffer[strcspn(buffer,"\n")] = '\0'; // Delete the \n char & end this string.
 
-    fprintf(stdout, "User input, lenght of %zu, is: %s\n",
-        charsRead, buffer);
+    // fprintf(stdout, "User input, lenght of %zu, is: %s\n",
+    //     charsRead, buffer);
 
     return buffer;
 }
@@ -112,9 +143,17 @@ int main(int argc, char *argv[]) {
 
     // while reading if encountered EOF -> exit(0);
 
-    // if no batch file is given
+// if no batch file is given
     char* input;
     char* command;
+
+    // Initial path to look for commands is '/bin/'
+    pathNumber = 1;
+    pathList = (char**)malloc(sizeof(char*)*pathNumber);
+    pathList[0] = (char*)malloc(sizeof(char)*PATH_LENGHT);
+    // There might be a problem with last '/'
+    // Change the way you handle.
+    strcpy(pathList[0], "/bin/");
 
     // if in interactive mode.
     while (TRUE) {
@@ -133,9 +172,48 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "Error when parsing input!\n");
             exit (1);
         }
+        // Apply if built-in commands are given.
+        // TODO: You can handle built-in functions in different function rather than main.
         if (strcmp(command, "exit") == 0) {
+            if (argNum > 1) {
+                fprintf(stderr, "Arguments cannot be given for exit!\n");
+                exit (1);
+            }
+
             fprintf(stdout, "Exit is given as command!\n");
             exit(0);
+        }
+        else if (strcmp(command, "cd") == 0) {
+            if (argNum != 2) {
+                fprintf(stderr, "Less or more arguments given for cd!\n");
+                exit (1);
+            }
+
+            char cwd[PATH_LENGHT];
+            if (chdir(arguments[1]) == -1) {
+                fprintf(stderr, "There was an error when applying cd!\n");
+                exit (1);
+            }
+            else {
+                fprintf(stdout, "Directory changed to: %s\n", getcwd(cwd, PATH_LENGHT));
+            }
+        }
+        else if (strcmp(command, "path") == 0) {
+            // TODO: Implement the logic for chaning pathList & pathNumber
+            // Override and free the current path
+            for (int i = 0; i < pathNumber; i++)
+                free(pathList[i]);
+            free(pathList);
+
+            pathNumber = argNum - 1;
+            pathList = (char**)malloc(sizeof(char*)* (argNum- 1));
+            for (int j = 0; j < argNum - 1; j++) {
+                pathList[j] = (char*)malloc(sizeof(char)*PATH_LENGHT);
+                strcpy(pathList[j], arguments[j + 1]); // There might be a problem with indices
+            }
+
+            for (int k = 0; k < pathNumber; k++)
+                fprintf(stdout, "pathList[%d]: %s\n", k, pathList[k]);
         }
         else {
             if (applyCommand(command, arguments, argNum) > 0) {
