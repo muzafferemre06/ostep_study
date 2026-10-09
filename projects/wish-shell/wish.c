@@ -118,19 +118,71 @@ char* getInput(void) {
 
     return buffer;
 }
+/* int trimWhiteSpaces(char* str) {
+    int begCursor, endCursor;
+    int firstFound = 0;
+    int newWordFound = 0;
+    begCursor = endCursor = 0;
+
+    while(str[endCursor] != '\0') {
+        // Handle begging
+        while(str[endCursor] != '\0' && str[endCursor] == ' ')
+            endCursor++;
+
+        if (!firstFound)
+            firstFound = 1;
+        else
+            str[begCursor++] = ' ';
+
+        // Copy till you hit a space again.
+        while(str[endCursor] != '\0' && str[endCursor] != ' ') {
+            str[begCursor++] = str[endCursor++];
+        }
+    }
+    str[begCursor] = '\0';
+
+    fprintf(stdout, "Trimmed sample input: '%s'\n", str);
+    return 0;
+} */
 int parseInput(char* input, char* command[], char* arguments[], int* argNum) {
     // TODO: Add some checks for error catching!
-    // TODO: delete trailing spaces -> look for if an argument only contains by space.
-    int i;
-    for(i = 0; i < ARG_LIM &&
-        (arguments[i] = strsep(&input, " ")) != NULL; i++);
+    int i = 0;
+    char* argument = " ";
+
+   /*  if (trimWhiteSpaces(input) > 0) {
+        fprintf(stderr, "There was a problem when trimming whitspaces in input!\n");
+        return (1);
+    } */
+
+    // Delete where you handled whitespaces one by one
+    while (i < ARG_LIM && (argument = strsep(&input, " ")) != NULL) {
+        if (strcmp(argument, "") != 0) { // Skips trailing spaces
+            if (argument[0] == '>') {
+                // how to check one '>' and one file given?
+                if (argument[1] != '\0') { // CHECK: there might be problems with spacing!
+                    fprintf(stderr, "Wrong usage of redirection!\n");
+                    return (1);
+                }
+
+                continue;
+            }
+            else if (strcmp(argument, "&") == 0) {
+                // if user enters more than one '&'?
+                continue;
+            }
+            else {
+                arguments[i] = argument;
+                i++;
+            }
+        }
+    }
 
     *argNum = i;
     *command = arguments[0];
     arguments[*argNum] = NULL; // for execv function
 
-    // for (i = 0; i < *argNum; i++)
-    //     fprintf(stdout, "%d. arg is %s\n", i, arguments[i]);
+    for (i = 0; i < *argNum; i++)
+        fprintf(stdout, "%d. arg is %s\n", i, arguments[i]);
     return (0);
 }
 int main(int argc, char *argv[]) {
